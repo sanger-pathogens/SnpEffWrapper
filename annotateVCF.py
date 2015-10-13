@@ -2,20 +2,30 @@
 
 import unittest
 
+class DatabaseCache(object):
+  def __init__(self, database_dir):
+    pass
+
+  def get_database(self, gff_file):
+    pass
+
+  def add_database(self, gff_file):
+    pass
+
+class AnnotationDatabase(object):
+  pass
+
 if __name__ == '__main__':
   args = parse_arguments()
+  database_cache = DatabaseCache(args.database_dir)
   try:
-    database = get_database_path(args.database_dir, args.gff)
+    database = database_cache.get_database(args.gff)
   except MissingDatabase:
-    database = build_database(args.database_dir, args.gff)
-  database_contigs = get_database_contigs(args.database_dir, database)
-  vcf_contigs = get_vcf_contigs(args.input_vcf)
-  contigs_in_common = compare_contigs(database_contigs, vcf_contigs)
-  if len(contigs_in_common) == 0:
-    fail_missing_contigs(database_contigs, vcf_contigs)
-  annotated_vcf = annotate_vcf(args.database_dir, database, args.input_vcf)
+    database = database_cache.add_database(args.gff)
+  contigs_in_common = database.check_contigs(args.input_vcf)
+  annotated_vcf = database.annotate_vcf(args.input_vcf)
   annotation_errors = check_annotated_vcf(annotated_vcf)
-  if len(annotation_errors):
+  if annotation_errors:
     fail_annotation_errors(annotation_errors)
   output_annotated_vcf(annotated_vcf)
 
