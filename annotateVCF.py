@@ -3,8 +3,6 @@
 import shutil
 import unittest
 
-from unittest.mock import MagicMock
-
 class MissingSNPEffError(ValueError):
   pass
 
@@ -29,18 +27,3 @@ def annotate_vcf(args):
 if __name__ == '__main__':
   args = parse_arguments()
   annotate_vcf(args)
-
-class TestAnnotateVCF(unittest.TestCase):
-  def setUp(self):
-    class FakeArgs(object):
-      pass
-    self.fake_args = FakeArgs()
-
-  def test_snpeff_not_installed(self):
-    import shutil
-    print(shutil.which('python'))
-    shutil_backup = shutil
-    shutil = MagicMock()
-    shutil.which.return_value = None
-    self.assertRaises(MissingSNPEffError, parse_arguments)
-    shutil = shutil_backup
