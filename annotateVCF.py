@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
 
+import shutil
 import unittest
+
+from unittest.mock import MagicMock
+
+class MissingSNPEffError(ValueError):
+  pass
 
 def parse_arguments():
   # set default coding table e.g. 'default: Bacterial_and_Plant_Plastid'
-  pass
+  if shutil.which('snpeff') is None:
+    raise MissingSNPEffError("Could not find snpeff in PATH")
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
@@ -24,8 +31,16 @@ if __name__ == '__main__':
   annotate_vcf(args)
 
 class TestAnnotateVCF(unittest.TestCase):
-  def test_true(self):
-    self.assertTrue(False)
+  def setUp(self):
+    class FakeArgs(object):
+      pass
+    self.fake_args = FakeArgs()
 
   def test_snpeff_not_installed(self):
-    pass
+    import shutil
+    print(shutil.which('python'))
+    shutil_backup = shutil
+    shutil = MagicMock()
+    shutil.which.return_value = None
+    self.assertRaises(MissingSNPEffError, parse_arguments)
+    shutil = shutil_backup
