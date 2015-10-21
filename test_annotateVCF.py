@@ -147,5 +147,12 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     warn_mock.assert_any_call('Could not annotate contig \'PLASMID2\', no annotation data')
     warn_mock.reset_mock()
 
+    vcf_contigs = ['CHROM1']
+    gff_contigs = ['CHROM1']
+    coding_table = {'default': 'UNKNOWN_CODING_TABLE'}
+    self.assertRaises(UnknownCodingTableError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Could not find coding table \'UNKNOWN_CODING_TABLE\'')
+    warn_mock.reset_mock()
+
 if __name__ == '__main__':
   unittest.main()

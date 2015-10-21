@@ -15,6 +15,9 @@ class NoCommonContigsError(ValueError):
 class MissingCodonTableError(ValueError):
   pass
 
+class UnknownCodingTableError(ValueError):
+  pass
+
 def parse_arguments():
   # set default coding table e.g. 'default: Bacterial_and_Plant_Plastid'
   parser = argparse.ArgumentParser()
@@ -75,16 +78,54 @@ def check_contigs(vcf_contigs, gff_contigs, coding_table):
                              if table not in coding_table]
   for table in missing_coding_tables:
     logging.warn("Cannot annotate VCF, no coding table set for '%s'" % table)
-  if len(missing_coding_tables) > 0:
-    raise MissingCodonTableError("Could not find coding tables for all contigs, see warnings for details")
 
   # Check the VCF contigs are consistent with the GFF contigs
   missing_contigs = [contig for contig in vcf_contigs
                      if contig not in gff_contigs]
   for contig in missing_contigs:
     logging.warn("Could not annotate contig '%s', no annotation data" % contig)
+
+  # Check the coding_table has known encodings
+  known_encodings = [
+    'Alternative_Flatworm_Mitochondrial',
+    'Alternative_Yeast_Nuclear',
+    'Ascidian_Mitochondrial',
+    'Bacterial_and_Plant_Plastid',
+    'Blepharisma_Macronuclear',
+    'Chlorophycean_Mitochondrial',
+    'Ciliate_Nuclear',
+    'Coelenterate',
+    'Dasycladacean_Nuclear',
+    'Echinoderm_Mitochondrial',
+    'Euplotid_Nuclear',
+    'Flatworm_Mitochondrial',
+    'Hexamita_Nuclear',
+    'Invertebrate_Mitochondrial',
+    'Mitochondrial',
+    'Mold_Mitochondrial',
+    'Mycoplasma',
+    'Protozoan_Mitochondrial',
+    'Scenedesmus_obliquus_Mitochondrial',
+    'Spiroplasma',
+    'Standard',
+    'Thraustochytrium_Mitochondrial',
+    'Trematode_Mitochondrial',
+    'Vertebrate_Mitochondrial',
+    'Yeast_Mitochondrial'
+  ]
+  unknown_encodings = [enc for enc in coding_table.values()
+                       if enc not in known_encodings]
+  for encoding in unknown_encodings:
+    logging.warn("Could not find coding table '%s'" %
+                 encoding)
+
+  # Blow up for critical issues
+  if len(missing_coding_tables) > 0:
+    raise MissingCodonTableError("Could not find coding tables for all contigs, see warnings for details")
   if missing_contigs == vcf_contigs:
     raise NoCommonContigsError("Could not find anotation data for any contigs, see warnings for details")
+  if len(unknown_encodings) > 0:
+    raise UnknownCodingTableError("Could not find coding table, see warnings for details")
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
