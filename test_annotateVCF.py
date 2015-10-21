@@ -80,5 +80,72 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     actual_contigs = get_vcf_contigs(fake_vcf)
     self.assertEqual(actual_contigs, expected_contigs)
 
+  @patch('annotateVCF.logging.warn')
+  def test_check_contigs(self, warn_mock):
+    vcf_contigs = ['CHROM1']
+    gff_contigs = ['CHROM1']
+    coding_table = {'default': 'Bacterial_and_Plant_Plastid'}
+    check_contigs(vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_not_called()
+
+    vcf_contigs = ['CHROM1']
+    gff_contigs = ['CHROM1']
+    coding_table = {'foo': 'Bacterial_and_Plant_Plastid'}
+    self.assertRaises(MissingCodonTableError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_called_once_with('Cannot annotate VCF, no coding table set for \'CHROM1\'')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['CHROM1', 'PLASMID1']
+    gff_contigs = ['CHROM1', 'PLASMID1']
+    coding_table = {'foo': 'Bacterial_and_Plant_Plastid'}
+    self.assertRaises(MissingCodonTableError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Cannot annotate VCF, no coding table set for \'CHROM1\'')
+    warn_mock.assert_any_call('Cannot annotate VCF, no coding table set for \'PLASMID1\'')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['CHROM1', 'PLASMID1']
+    gff_contigs = ['CHROM1', 'PLASMID1']
+    coding_table = {'CHROM1': 'Bacterial_and_Plant_Plastid'}
+    self.assertRaises(MissingCodonTableError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Cannot annotate VCF, no coding table set for \'PLASMID1\'')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['CHROM1', 'PLASMID1']
+    gff_contigs = ['ANOTHER_CHROM1', 'ANOTHER_PLASMID1']
+    coding_table = {'ANOTHER_CHROM1': 'Bacterial_and_Plant_Plastid'}
+    self.assertRaises(MissingCodonTableError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Cannot annotate VCF, no coding table set for \'CHROM1\'')
+    warn_mock.assert_any_call('Cannot annotate VCF, no coding table set for \'PLASMID1\'')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['CHROM1']
+    gff_contigs = ['CHROM1', 'PLASMID1']
+    coding_table = {'default': 'Bacterial_and_Plant_Plastid'}
+    check_contigs(vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_not_called()
+
+    vcf_contigs = ['CHROM1', 'PLASMID1']
+    gff_contigs = ['CHROM1']
+    coding_table = {'default': 'Bacterial_and_Plant_Plastid'}
+    check_contigs(vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Could not annotate contig \'PLASMID1\', no annotation data')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['CHROM1', 'PLASMID1', 'PLASMID2']
+    gff_contigs = ['CHROM1']
+    coding_table = {'default': 'Bacterial_and_Plant_Plastid'}
+    check_contigs(vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Could not annotate contig \'PLASMID1\', no annotation data')
+    warn_mock.assert_any_call('Could not annotate contig \'PLASMID2\', no annotation data')
+    warn_mock.reset_mock()
+
+    vcf_contigs = ['PLASMID1', 'PLASMID2']
+    gff_contigs = ['CHROM1']
+    coding_table = {'default': 'Bacterial_and_Plant_Plastid'}
+    self.assertRaises(NoCommonContigsError, check_contigs, vcf_contigs, gff_contigs, coding_table)
+    warn_mock.assert_any_call('Could not annotate contig \'PLASMID1\', no annotation data')
+    warn_mock.assert_any_call('Could not annotate contig \'PLASMID2\', no annotation data')
+    warn_mock.reset_mock()
+
 if __name__ == '__main__':
   unittest.main()

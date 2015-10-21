@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
 import shutil
 import unittest
 import yaml
 
 class MissingSNPEffError(ValueError):
+  pass
+
+class NoCommonContigsError(ValueError):
+  pass
+
+class MissingCodonTableError(ValueError):
   pass
 
 def parse_arguments():
@@ -53,6 +60,31 @@ def get_vcf_contigs(vcf_file):
     contig = line.split('\t')[0].strip()
     contigs.add(contig)
   return sorted(contigs)
+
+def check_contigs(vcf_contigs, gff_contigs, coding_table):
+  """Check that contigs are consistent
+
+  If any contig in the VCF isn't in the coding table, fail.
+  If not all of the VCF contigs are in the GFF, raise warnings.
+  If none of the VCF contigs are in the GFF, fail"""
+
+  # Check the VCF contigs are consistent with the coding table
+  missing_coding_tables = []
+  if 'default' not in coding_table:
+    missing_coding_tables = [table for table in vcf_contigs
+                             if table not in coding_table]
+  for table in missing_coding_tables:
+    logging.warn("Cannot annotate VCF, no coding table set for '%s'" % table)
+  if len(missing_coding_tables) > 0:
+    raise MissingCodonTableError("Could not find coding tables for all contigs, see warnings for details")
+
+  # Check the VCF contigs are consistent with the GFF contigs
+  missing_contigs = [contig for contig in vcf_contigs
+                     if contig not in gff_contigs]
+  for contig in missing_contigs:
+    logging.warn("Could not annotate contig '%s', no annotation data" % contig)
+  if missing_contigs == vcf_contigs:
+    raise NoCommonContigsError("Could not find anotation data for any contigs, see warnings for details")
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
