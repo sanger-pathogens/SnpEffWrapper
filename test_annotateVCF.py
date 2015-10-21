@@ -154,5 +154,28 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     warn_mock.assert_any_call('Could not find coding table \'UNKNOWN_CODING_TABLE\'')
     warn_mock.reset_mock()
 
+  def test_get_genome_name(self):
+    class FakeFile(object):
+      def __init__(self, name):
+        self.name = name
+
+    gff_file = FakeFile('foo')
+    self.assertEqual(get_genome_name(gff_file), 'foo')
+
+    gff_file = FakeFile('foo.gff')
+    self.assertEqual(get_genome_name(gff_file), 'foo')
+
+    gff_file = FakeFile('foo.gff.gz')
+    self.assertEqual(get_genome_name(gff_file), 'foo')
+
+    gff_file = FakeFile('foogffxgff')
+    self.assertEqual(get_genome_name(gff_file), 'foogffxgff')
+
+    gff_file = FakeFile('foogff.gff')
+    self.assertEqual(get_genome_name(gff_file), 'foogff')
+
+    gff_file = FakeFile('foo.gz')
+    self.assertEqual(get_genome_name(gff_file), 'foo.gz')
+
 if __name__ == '__main__':
   unittest.main()

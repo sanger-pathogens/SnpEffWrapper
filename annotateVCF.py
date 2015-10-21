@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import re
 import shutil
 import unittest
 import yaml
@@ -127,12 +128,16 @@ def check_contigs(vcf_contigs, gff_contigs, coding_table):
   if len(unknown_encodings) > 0:
     raise UnknownCodingTableError("Could not find coding table, see warnings for details")
 
+def get_genome_name(gff_file):
+  return re.sub('\.gff(\.gz)?$', '', gff_file.name)
+
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
   gff_contigs = get_gff_contigs(args.gff_file)
   vcf_contigs = get_vcf_contigs(args.vcf_file)
   check_contigs(vcf_contigs, gff_contigs, coding_table)
   temp_database_dir = create_temp_database(args.data_dir, args.gff_file)
+  genome_name = get_genome_name(args.gff_file)
   config_file = create_config_file(temp_database_dir, args.gff_file,
                                    vcf_contigs, coding_table)
   annotated_vcf_path = annotate_vcf(args.vcf, config_file)
