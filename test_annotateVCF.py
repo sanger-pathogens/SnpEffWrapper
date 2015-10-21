@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from io import StringIO
 from unittest.mock import patch, MagicMock
 
 from annotateVCF import *
@@ -49,6 +50,21 @@ class TestAnnotateVCF(unittest.TestCase):
     expected = {'foo': 'bar', 'default': 'Bacterial_and_Plant_Plastid'}
     actual = parse_coding_table(coding_table_str)
     self.assertEqual(actual, expected)
+
+  def test_get_gff_contigs(self):
+    fake_gff = StringIO("""\
+##gff-version 3
+##sequence-region CHROM1 1 4000000
+##sequence-region PLASMID1 1 2000000
+##sequence-region PLASMID2 1 1000000
+CHROM1	EMBL	databank_entry	1	4000000	.	+	.	Some=Data
+CHROM1	EMBL	CDS	100	400	.	+	0	Some=More	data
+PLASMID1	EMBL	databank_entry	1	2000000	.	+	.	Some=Plasmid	data
+PLASMID1	EMBL	CDS	300	700	.	+	0	Some=More	plasmid	data
+""")
+    expected_contigs = ['CHROM1', 'PLASMID1']
+    actual_contigs = get_gff_contigs(fake_gff)
+    self.assertEqual(actual_contigs, expected_contigs)
 
 if __name__ == '__main__':
   unittest.main()
