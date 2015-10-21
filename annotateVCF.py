@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import shutil
 import unittest
 
@@ -8,8 +9,16 @@ class MissingSNPEffError(ValueError):
 
 def parse_arguments():
   # set default coding table e.g. 'default: Bacterial_and_Plant_Plastid'
-  if shutil.which('snpeff') is None:
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--snpeff-exec', type=argparse.FileType('r'))
+  args = parser.parse_args()
+
+  if args.snpeff_exec is None:
+    args.snpeff_exec = shutil.which('snpeff')
+  if args.snpeff_exec is None:
     raise MissingSNPEffError("Could not find snpeff in PATH")
+
+  return args
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
