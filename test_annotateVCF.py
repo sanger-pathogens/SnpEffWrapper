@@ -66,5 +66,19 @@ PLASMID1	EMBL	CDS	300	700	.	+	0	Some=More	plasmid	data
     actual_contigs = get_gff_contigs(fake_gff)
     self.assertEqual(actual_contigs, expected_contigs)
 
+  def test_get_vcf_contigs(self):
+    fake_vcf = StringIO("""\
+##fileformat=VCFv4.1
+##contig=<ID=1,length=4000000>
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	10000_2#3	10000_2#4
+CHROM1	100	.	G	A	.	.	.	GT	0	1
+CHROM1	200	.	G	A	.	.	.	GT	0	1
+PLASMID1	50	.	G	T	.	.	.	GT	1	0
+""")
+    expected_contigs = ['CHROM1', 'PLASMID1']
+    actual_contigs = get_vcf_contigs(fake_vcf)
+    self.assertEqual(actual_contigs, expected_contigs)
+
 if __name__ == '__main__':
   unittest.main()

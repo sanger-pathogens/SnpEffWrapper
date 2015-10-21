@@ -40,6 +40,20 @@ def get_gff_contigs(gff_file):
     contigs.add(contig)
   return sorted(contigs)
 
+def get_vcf_contigs(vcf_file):
+  """Hacky vcf parser to get contigs
+
+  Just looks for the contigs, assumes they're the first column
+  of a tab delimited file where the line doesn't start with '#'"""
+  vcf_file.seek(0)
+  contigs = set()
+  for line in vcf_file:
+    if line[0] == '#':
+      continue
+    contig = line.split('\t')[0].strip()
+    contigs.add(contig)
+  return sorted(contigs)
+
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
   gff_contigs = get_gff_contigs(args.gff_file)
