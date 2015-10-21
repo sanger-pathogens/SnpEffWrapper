@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import os
 import re
 import shutil
 import unittest
@@ -128,6 +129,13 @@ def check_contigs(vcf_contigs, gff_contigs, coding_table):
   if len(unknown_encodings) > 0:
     raise UnknownCodingTableError("Could not find coding table, see warnings for details")
 
+def create_temp_database(gff_file):
+  database_dir = tempfile.TemporaryDirectory(prefix='snpeff_data_dir_', dir=os.getcwd())
+  data_dir = os.path.join([database_dir, 'data'])
+  os.mkdirs(data_dir, mode=0o644)
+  shutil.copy(gff.name, os.path.join([data_dir,'genes.gff']))
+  return database_dir
+
 def get_genome_name(gff_file):
   return re.sub('\.gff(\.gz)?$', '', gff_file.name)
 
@@ -136,9 +144,9 @@ def annotate_vcf(args):
   gff_contigs = get_gff_contigs(args.gff_file)
   vcf_contigs = get_vcf_contigs(args.vcf_file)
   check_contigs(vcf_contigs, gff_contigs, coding_table)
-  temp_database_dir = create_temp_database(args.data_dir, args.gff_file)
+  temp_database_dir = create_temp_database(args.gff_file)
   genome_name = get_genome_name(args.gff_file)
-  config_file = create_config_file(temp_database_dir, args.gff_file,
+  config_file = create_config_file(temp_database_dir, genome_name,
                                    vcf_contigs, coding_table)
   annotated_vcf_path = annotate_vcf(args.vcf, config_file)
   check_annotations(annotated_vcf_path)
