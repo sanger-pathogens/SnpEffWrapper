@@ -3,6 +3,7 @@
 import argparse
 import shutil
 import unittest
+import yaml
 
 class MissingSNPEffError(ValueError):
   pass
@@ -11,6 +12,8 @@ def parse_arguments():
   # set default coding table e.g. 'default: Bacterial_and_Plant_Plastid'
   parser = argparse.ArgumentParser()
   parser.add_argument('--snpeff-exec', type=argparse.FileType('r'))
+  parser.add_argument('--coding-table', type=str,
+                      default='default: Bacterial_and_Plant_Plastid')
   args = parser.parse_args()
 
   if args.snpeff_exec is None:
@@ -19,6 +22,9 @@ def parse_arguments():
     raise MissingSNPEffError("Could not find snpeff in PATH")
 
   return args
+
+def parse_coding_table(coding_table_str):
+  return yaml.load(coding_table_str)
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)

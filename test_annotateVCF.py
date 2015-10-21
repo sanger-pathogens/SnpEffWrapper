@@ -34,6 +34,21 @@ class TestAnnotateVCF(unittest.TestCase):
     shutil_mock.which.assert_any_call('snpeff')
     self.assertEqual(actual_args.snpeff_exec, '/bin/snpEff')
 
+  def test_parse_coding_table(self):
+    coding_table_str = 'default: Bacterial_and_Plant_Plastid'
+    expected = {'default': 'Bacterial_and_Plant_Plastid'}
+    actual = parse_coding_table(coding_table_str)
+    self.assertEqual(actual, expected)
+
+    coding_table_str = 'foo: bar'
+    expected = {'foo': 'bar'}
+    actual = parse_coding_table(coding_table_str)
+    self.assertEqual(actual, expected)
+
+    coding_table_str = '{foo: bar, default: Bacterial_and_Plant_Plastid}'
+    expected = {'foo': 'bar', 'default': 'Bacterial_and_Plant_Plastid'}
+    actual = parse_coding_table(coding_table_str)
+    self.assertEqual(actual, expected)
 
 if __name__ == '__main__':
   unittest.main()
