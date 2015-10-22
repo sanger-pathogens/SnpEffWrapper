@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
+import unittest
+
 from io import StringIO
 from unittest.mock import patch, MagicMock
 
-from annotateVCF import *
+from annotateVCF.annotateVCF import *
 
 class TestAnnotateVCF(unittest.TestCase):
   def setUp(self):
@@ -11,8 +13,8 @@ class TestAnnotateVCF(unittest.TestCase):
       pass
     self.fake_args = FakeArgs()
 
-  @patch('annotateVCF.argparse.ArgumentParser')
-  @patch('annotateVCF.shutil')
+  @patch('annotateVCF.annotateVCF.argparse.ArgumentParser')
+  @patch('annotateVCF.annotateVCF.shutil')
   def test_snpeff_not_in_path(self, shutil_mock, argument_parser_mock):
     parsed_args = MagicMock()
     parsed_args.snpeff_exec = 'foobar'
@@ -80,7 +82,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     actual_contigs = get_vcf_contigs(fake_vcf)
     self.assertEqual(actual_contigs, expected_contigs)
 
-  @patch('annotateVCF.logging.warn')
+  @patch('annotateVCF.annotateVCF.logging.warn')
   def test_check_contigs(self, warn_mock):
     vcf_contigs = ['CHROM1']
     gff_contigs = ['CHROM1']

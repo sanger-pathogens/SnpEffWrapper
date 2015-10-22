@@ -1,0 +1,2 @@
+recursive-include annotateVCF/data *
+recursive-include annotateVCF/tests/data *
