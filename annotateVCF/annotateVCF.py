@@ -8,6 +8,8 @@ import shutil
 import unittest
 import yaml
 
+from jinja2 import Environment, PackageLoader
+
 class MissingSNPEffError(ValueError):
   pass
 
@@ -139,6 +141,21 @@ def create_temp_database(gff_file):
 def get_genome_name(gff_file):
   return re.sub('\.gff(\.gz)?$', '', gff_file.name)
 
+def create_config_file(temp_database_dir, genome_name, vcf_contigs,
+                       coding_table):
+  env = Environment(loader=PackageLoader('annotateVCF', 'data'))
+  template = env.get_template('config.template')
+  output_filename = os.path.join(temp_database_dir, 'config')
+  config_content = template.render(
+    temp_database_dir=temp_database_dir,
+    genome_name=genome_name,
+    vcf_contigs=vcf_contigs,
+    coding_table=coding_table
+  )
+  with open(output_filename, 'w') as output_file:
+    print(config_content, file=output_file, flush=True)
+  return output_filename
+
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
   gff_contigs = get_gff_contigs(args.gff_file)
@@ -146,9 +163,9 @@ def annotate_vcf(args):
   check_contigs(vcf_contigs, gff_contigs, coding_table)
   temp_database_dir = create_temp_database(args.gff_file)
   genome_name = get_genome_name(args.gff_file)
-  config_file = create_config_file(temp_database_dir, genome_name,
+  config_filename = create_config_file(temp_database_dir, genome_name,
                                    vcf_contigs, coding_table)
-  annotated_vcf_path = annotate_vcf(args.vcf, config_file)
+  annotated_vcf_path = annotate_vcf(args.vcf, config_filename)
   check_annotations(annotated_vcf_path)
   move_annotated_vcf(annotated_vcf_path, args.output_vcf.name)
   delete_temp_database(temp_database_dir)

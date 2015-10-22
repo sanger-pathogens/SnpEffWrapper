@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+import tempfile
 import unittest
+import pkg_resources
 
 from io import StringIO
 from unittest.mock import patch, MagicMock
@@ -178,6 +180,39 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
 
     gff_file = FakeFile('foo.gz')
     self.assertEqual(get_genome_name(gff_file), 'foo.gz')
+
+  @patch('annotateVCF.annotateVCF.open', create=True)
+  def test_create_config_file(self, open_mock):
+    try:
+      fake_output_file = tempfile.NamedTemporaryFile(mode='w',
+                                                     prefix='annotateVCF_tmp_',
+                                                     dir=os.getcwd(),
+                                                     delete=False)
+      open_mock.return_value = fake_output_file
+      fake_output_filename = fake_output_file.name
+  
+      tests_dir = pkg_resources.resource_filename('annotateVCF', 'tests')
+      expected_config_filename = os.path.join(tests_dir, 'data', 'config')
+      temp_database_dir = '/tmp/fake_dir'
+      genome_name = 'fake_genome'
+      vcf_contigs = ['CHROM1', 'PLASMID1']
+      coding_table = {
+        'default': 'Standard',
+        'CHROM1': 'Bacterial_and_Plant_Plastid'
+      }
+      config_filename = create_config_file(temp_database_dir, genome_name,
+                                           vcf_contigs, coding_table)
+      open_mock.called_once_with(config_filename, 'w')
+      with open(fake_output_filename, 'r') as fake_output_file:
+        actual_config = fake_output_file.read()
+      with open(expected_config_filename, 'r') as expected_config_file:
+        expected_config = expected_config_file.read()
+      self.assertMultiLineEqual(actual_config, expected_config)
+    except:
+      os.remove(fake_output_filename)
+      raise
+    finally:
+      os.remove(fake_output_filename)
 
 if __name__ == '__main__':
   unittest.main()
