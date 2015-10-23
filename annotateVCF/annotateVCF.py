@@ -256,6 +256,13 @@ def check_annotations(annotated_vcf):
   if len(error_counter) > 0:
     raise AnnotationError("There were problems during the annotation, please review the warnings for details")
 
+def move_annotated_vcf(annotated_vcf, output_path):
+  annotated_vcf.close()
+  shutil.move(annotated_vcf.name, output_path)
+
+def delete_temp_database(temp_database_dir):
+  shutil.rmtree(temp_database_dir)
+
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
   gff_contigs = get_gff_contigs(args.gff_file)
@@ -268,7 +275,7 @@ def annotate_vcf(args):
   annotated_vcf = annotate_vcf(temp_database_dir, args.java_exec, args.snpeff_exec,
                                     args.vcf, config_filename)
   check_annotations(annotated_vcf)
-  move_annotated_vcf(annotated_vcf_path, args.output_vcf.name)
+  move_annotated_vcf(annotated_vcf, args.output_vcf.name)
   delete_temp_database(temp_database_dir)
 
 if __name__ == '__main__':
