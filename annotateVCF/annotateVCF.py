@@ -5,12 +5,17 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import unittest
 import yaml
 
 from jinja2 import Environment, PackageLoader
+from subprocess import CalledProcessError
 
 class MissingSNPEffError(ValueError):
+  pass
+
+class WrongJavaError(ValueError):
   pass
 
 class NoCommonContigsError(ValueError):
@@ -22,6 +27,11 @@ class MissingCodonTableError(ValueError):
 class UnknownCodingTableError(ValueError):
   pass
 
+class BuildDatabaseError(ValueError):
+  pass
+
+class AnnotationError(ValueError):
+  pass
 
 def _java_version_ok(java):
   try:

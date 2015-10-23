@@ -15,9 +15,10 @@ class TestAnnotateVCF(unittest.TestCase):
       pass
     self.fake_args = FakeArgs()
 
+  @patch('annotateVCF.annotateVCF._java_version_ok')
   @patch('annotateVCF.annotateVCF.argparse.ArgumentParser')
   @patch('annotateVCF.annotateVCF.shutil')
-  def test_snpeff_not_in_path(self, shutil_mock, argument_parser_mock):
+  def test_snpeff_not_in_path(self, shutil_mock, argument_parser_mock, java_ok):
     parsed_args = MagicMock()
     parsed_args.snpeff_exec = 'foobar'
     argument_parser = MagicMock()
