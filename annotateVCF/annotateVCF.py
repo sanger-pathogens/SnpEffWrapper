@@ -184,6 +184,45 @@ def create_config_file(temp_database_dir, genome_name, vcf_contigs,
     print(config_content, file=output_file, flush=True)
   return output_filename
 
+def _snpeff_build_database(java_exec, snpeff_exec, config_filename):
+  command = [java_exec, "-Xmx4g", "-jar",
+             snpeff_exec, "build",
+             "-gff3", "-verbose",
+             "data",
+             "-c", config_filename]
+  logging.info("Building snpeff database")
+  logging.debug("using the following command: %s" % " ".join(command))
+  try:
+    subprocess.check_call(command)
+  except CalledProcessError:
+    raise BuildDatabaseError("Problem building the database from your GFF")
+
+def _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename,
+                     output_file):
+  command = [java_exec, "-Xmx4g", "-jar",
+             snpeff_exec, "ann",
+             "-nodownload", "-verbose",
+             "-c", config_filename,
+             "data",
+             vcf_filename]
+  logging.info("Annotating %s" % vcf_filename)
+  logging.debug("using the following command: %s" % " ".join(command))
+  logging.debug("writing output to %s" % output_file.name)
+  try:
+    subprocess.check_call(command, stdout=output_file)
+  except CalledProcessError:
+    raise AnnotationError("Problem annotating %s" % vcf_filename)
+
+def annotate_vcf(temp_database_dir, java_exec, snpeff_exec, vcf_file, config_filename):
+  temp_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                 dir=temp_database_dir,
+                                                 prefix='snpeff_annotation_',
+                                                 suffix='.vcf')
+  vcf_filename = vcf_file.name
+  _snpeff_build_database(java_exec, snpeff_exec, config_filename)
+  _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename, temp_output_file)
+  return temp_output_file
+
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
   gff_contigs = get_gff_contigs(args.gff_file)
@@ -193,8 +232,9 @@ def annotate_vcf(args):
   genome_name = get_genome_name(args.gff_file)
   config_filename = create_config_file(temp_database_dir, genome_name,
                                    vcf_contigs, coding_table)
-  annotated_vcf_path = annotate_vcf(args.vcf, config_filename)
-  check_annotations(annotated_vcf_path)
+  annotated_vcf = annotate_vcf(temp_database_dir, args.java_exec, args.snpeff_exec,
+                                    args.vcf, config_filename)
+  check_annotations(annotated_vcf)
   move_annotated_vcf(annotated_vcf_path, args.output_vcf.name)
   delete_temp_database(temp_database_dir)
 
