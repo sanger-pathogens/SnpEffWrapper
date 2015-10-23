@@ -215,5 +215,24 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     finally:
       os.remove(fake_output_filename)
 
+  @patch('annotateVCF.annotateVCF.logging.warn')
+  def test_check_annotations(self, warn_mock):
+    fake_vcf = StringIO("""\
+##fileformat=VCFv4.1
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample_1	sample_2
+CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|	GT	0	1
+""")
+    self.assertEqual(check_annotations(fake_vcf), None)
+    warn_mock.assert_not_called()
+
+    fake_vcf = StringIO("""\
+##fileformat=VCFv4.1
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample_1	sample_2
+CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|ERROR_CHROMOSOME_NOT_FOUND	GT	0	1
+""")
+    self.assertRaises(AnnotationError, check_annotations, fake_vcf)
+    expected_warning = "1 instances of 'ERROR_CHROMOSOME_NOT_FOUND': A contig in your VCF could not be found in your GFF. Are you sure that contigs use consitent names between your input data and the reference?"
+    warn_mock.assert_called_once_with(expected_warning)
+
 if __name__ == '__main__':
   unittest.main()

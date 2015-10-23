@@ -7,8 +7,10 @@ import re
 import shutil
 import subprocess
 import unittest
+import vcf
 import yaml
 
+from collections import Counter
 from jinja2 import Environment, PackageLoader
 from subprocess import CalledProcessError
 
@@ -232,6 +234,27 @@ def annotate_vcf(temp_database_dir, java_exec, snpeff_exec, vcf_file, config_fil
   _snpeff_build_database(java_exec, snpeff_exec, config_filename)
   _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename, temp_output_file)
   return temp_output_file
+
+def check_annotations(annotated_vcf):
+  error_map = {
+    'WARNING_REF_DOES_NOT_MATCH_GENOME': "The reference base in your VCF didn't match the base in the GFF. Are you sure you have the right reference?",
+    'WARNING_SEQUENCE_NOT_AVAILABLE': "A reference sequence was not available in your GFF. Please check that a reference sequence is available for every contig in your VCF",
+    'ERROR_CHROMOSOME_NOT_FOUND': "A contig in your VCF could not be found in your GFF. Are you sure that contigs use consitent names between your input data and the reference?",
+    'ERROR_OUT_OF_CHROMOSOME_RANGE': "One of your variants appears to be in a position beyond the end of the reference sequence. That's really weird, please check that you reference sequence matches your input data"
+  }
+  error_counter = Counter()
+  annotated_vcf.seek(0)
+  vcf_reader = vcf.Reader(annotated_vcf)
+  for record in vcf_reader:
+    annotations = ','.join(record.INFO['ANN'])
+    counter_update = {error: 1 for error in error_map
+                      if error in annotations}
+    error_counter.update(counter_update)
+  for error, count in error_counter.items():
+    logging.warn("%s instances of '%s': %s" % (count, error,
+                                               error_map[error]))
+  if len(error_counter) > 0:
+    raise AnnotationError("There were problems during the annotation, please review the warnings for details")
 
 def annotate_vcf(args):
   coding_table = parse_coding_table(args.coding_table)
