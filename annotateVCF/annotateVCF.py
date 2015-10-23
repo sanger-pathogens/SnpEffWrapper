@@ -22,10 +22,32 @@ class MissingCodonTableError(ValueError):
 class UnknownCodingTableError(ValueError):
   pass
 
+
+def _java_version_ok(java):
+  try:
+    output = subprocess.check_output([java, '-version'], stderr=subprocess.STDOUT)
+    first_line = output.decode("utf-8").splitlines()[0]
+    match = re.match('^java version "1\.7\.[^"]+"$', first_line)
+    return match is not None
+  except CalledProcessError: # Probably this java doesn't exist
+    return False
+  except IndexError: # Didn't return any output
+    return False
+
+def _choose_java():
+  path_java = shutil.which('java')
+  if not path_java is None and _java_version_ok(path_java):
+    return path_java
+  sanger_pathogens_java='/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java'
+  if not path_java is None and _java_version_ok(sanger_pathogens_java):
+    return sanger_pathogens_java
+  raise WrongJavaError("Could not find a suitable version of Java (1.7)")
+
 def parse_arguments():
   # set default coding table e.g. 'default: Bacterial_and_Plant_Plastid'
   parser = argparse.ArgumentParser()
   parser.add_argument('--snpeff-exec', type=argparse.FileType('r'))
+  parser.add_argument('--java-exec', type=argparse.FileType('r'))
   parser.add_argument('--coding-table', type=str,
                       default='default: Bacterial_and_Plant_Plastid')
   args = parser.parse_args()
@@ -34,6 +56,12 @@ def parse_arguments():
     args.snpeff_exec = shutil.which('snpeff')
   if args.snpeff_exec is None:
     raise MissingSNPEffError("Could not find snpeff in PATH")
+
+  if args.java_exec is None:
+    args.java_exec = _choose_java()
+  else:
+    if not _java_version_ok(args.java_exec):
+      raise WrongJavaError("Needs Java 1.7, %s isn't or couldn't be found" % args.java_exec)
 
   return args
 
