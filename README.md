@@ -55,9 +55,24 @@ optional arguments:
 
 ## Alternative coding tables
 
-You can provide a coding table for each VCF contig else it'll default to
-SnpEff's 'Bacterial_and_Plant_Plastid'.  You should provide a mapping from
-the names of contigs in your VCF to the relevant table in [annotateVCF/data/config.template](annotateVCF/data/config.template)
+You can provide a coding table for each VCF contig otherwise it'll default to
+SnpEff's 'Bacterial_and_Plant_Plastid'.  You can do this by providing a mapping for
+each contig in your VCF to the relevant table in [annotateVCF/data/config.template](annotateVCF/data/config.template)
+in YAML format.
+
+For example:
+```
+annotateVCF minimal.gff minimal.vcf \
+  --coding-table 'default: Standard'
+  
+annotateVCF minimal.gff minimal.vcf \
+  --coding-table '{CHROM1: Standard, MITO1: Mitochondrial}'
+  
+annotateVCF minimal.gff minimal.vcf \
+  --coding-table '{default: Standard, MITO1: Mitochondrial}'
+```
+
+NB you don't need curly brackets if you're only mapping one contig (or setting a default); you do need them if you're setting different coding tables.
 
 ## Built in sanity checks
 
