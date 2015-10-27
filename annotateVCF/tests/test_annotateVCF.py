@@ -8,6 +8,7 @@ from io import StringIO
 from unittest.mock import patch, MagicMock
 
 from annotateVCF.annotateVCF import *
+from annotateVCF.annotateVCF import _java_version_ok, _choose_java
 
 class TestAnnotateVCF(unittest.TestCase):
   def setUp(self):
@@ -214,6 +215,32 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
       raise
     finally:
       os.remove(fake_output_filename)
+
+  @patch('annotateVCF.annotateVCF.shutil.which')
+  @patch('annotateVCF.annotateVCF._java_version_ok')
+  def test_choose_java(self, java_ok_mock, which_mock):
+    which_mock.return_value = '/foo/bar/java'
+    java_ok_mock.side_effect = lambda java: java in list_of_ok_javas
+
+    list_of_ok_javas = [
+      '/foo/bar/java'
+    ]
+    self.assertEqual(_choose_java(), '/foo/bar/java')
+
+    list_of_ok_javas = [
+      '/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java'
+    ]
+    self.assertEqual(_choose_java(),
+                     '/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java')
+
+    list_of_ok_javas = [
+      '/foo/bar/java',
+      '/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java'
+    ]
+    self.assertEqual(_choose_java(), '/foo/bar/java')
+
+    list_of_ok_javas = []
+    self.assertRaises(WrongJavaError, _choose_java)
 
   @patch('annotateVCF.annotateVCF.logging.warn')
   def test_check_annotations(self, warn_mock):
