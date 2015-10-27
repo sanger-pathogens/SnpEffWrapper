@@ -1,5 +1,7 @@
 # AnnotateVCF
 
+[![Build Status](https://travis-ci.org/sanger-pathogens/AnnotateVCF.svg?branch=master)](https://travis-ci.org/sanger-pathogens/AnnotateVCF)
+
 Takes a VCF and applies annotations from a GFF using [SnpEff](http://snpeff.sourceforge.net/)
 
 If you use this, please consider [citing SnpEff](http://snpeff.sourceforge.net/SnpEff.html#citing); it
