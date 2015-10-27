@@ -7,13 +7,10 @@ setup(name='annotateVCF',
       scripts=[
         'scripts/annotateVCF'
       ],
-      test_suite='nose.collector',
-      tests_require=[
-        'nose',
-        'mock'
-      ],
       install_requires=[
-        'PyYAML',
+        'Jinja2',
+        'PyVCF',
+        'PyYAML'
       ],
       include_package_data=True,
       package_data={
