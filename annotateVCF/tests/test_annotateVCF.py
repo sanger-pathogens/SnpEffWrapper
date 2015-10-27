@@ -17,26 +17,42 @@ class TestAnnotateVCF(unittest.TestCase):
       pass
     self.fake_args = FakeArgs()
 
+  @patch('annotateVCF.annotateVCF.os.path.isfile')
   @patch('annotateVCF.annotateVCF._java_version_ok')
   @patch('annotateVCF.annotateVCF.shutil')
-  def test_snpeff_not_in_path(self, shutil_mock, java_ok):
+  def test_snpeff_not_in_path(self, shutil_mock, java_ok, isfile_mock):
+    isfile_mock.side_effect = lambda path: path in ['/foo/snpEff.jar', '/bin/snpEff.jar']
     parsed_args = MagicMock()
-    parsed_args.snpeff_exec.name = 'foobar'
+    parsed_args.snpeff_exec.name = '/foo/snpEff.jar'
     actual_args = check_and_amend_executables(parsed_args)
-    self.assertEqual(actual_args.snpeff_exec, 'foobar')
+    self.assertEqual(actual_args.snpeff_exec, '/foo/snpEff.jar')
 
     parsed_args.snpeff_exec = None
     shutil_mock.which.return_value = None
     self.assertRaises(MissingSNPEffError, check_and_amend_executables,
                       parsed_args)
-    shutil_mock.which.assert_any_call('snpeff')
+    shutil_mock.which.assert_any_call('snpEff.jar')
     shutil_mock.which.reset_mock()
 
     parsed_args.snpeff_exec = None
-    shutil_mock.which.return_value = '/bin/snpEff'
+    shutil_mock.which.return_value = '/bin/snpEff.jar'
     actual_args = check_and_amend_executables(parsed_args)
-    shutil_mock.which.assert_any_call('snpeff')
-    self.assertEqual(actual_args.snpeff_exec, '/bin/snpEff')
+    shutil_mock.which.assert_any_call('snpEff.jar')
+    self.assertEqual(actual_args.snpeff_exec, '/bin/snpEff.jar')
+    shutil_mock.which.reset_mock()
+
+    isfile_mock.return_value = False
+    parsed_args = MagicMock()
+    parsed_args.snpeff_exec.name = '/bar/snpEff.jar'
+    self.assertRaises(MissingSNPEffError, check_and_amend_executables,
+                      parsed_args)
+    self.assertEqual(shutil_mock.which.call_count, 0)
+
+    parsed_args.snpeff_exec = None
+    isfile_mock.side_effect = lambda path: path in ['snpEff.jar']
+    actual_args = check_and_amend_executables(parsed_args)
+    self.assertEqual(actual_args.snpeff_exec, 'snpEff.jar')
+    self.assertEqual(shutil_mock.which.call_count, 0)
 
   def test_parse_coding_table(self):
     coding_table_str = 'default: Bacterial_and_Plant_Plastid'

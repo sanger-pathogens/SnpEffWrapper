@@ -60,12 +60,17 @@ def _choose_java():
 
 def check_and_amend_executables(args):
   """Sets default executables and checks that they are suitable"""
-  if args.snpeff_exec is None:
-    args.snpeff_exec = shutil.which('snpeff')
-  else:
+  if not args.snpeff_exec is None:
     args.snpeff_exec = args.snpeff_exec.name
-  if args.snpeff_exec is None:
-    raise MissingSNPEffError("Could not find snpeff in PATH")
+  elif os.path.isfile('snpEff.jar'):
+    args.snpeff_exec = 'snpEff.jar'
+  elif not shutil.which('snpEff.jar') is None:
+    args.snpeff_exec = shutil.which('snpEff.jar')
+  else:
+    raise MissingSNPEffError("Could not find snpEff.jar in PATH")
+
+  if not os.path.isfile(args.snpeff_exec):
+    raise MissingSNPEffError("Could not find '%s'" % args.snpeff_exec)
 
   if args.java_exec is None:
     args.java_exec = _choose_java()
@@ -308,7 +313,7 @@ def move_annotated_vcf(annotated_vcf, output_vcf):
     shutil.move(annotated_vcf.name, output_vcf.name)
 
 def delete_temp_database(temp_database_dir):
-  logger.info("Deleting temporary files from %s" % temp_database_dir)
+  logger.debug("Deleting temporary files from %s" % temp_database_dir)
   shutil.rmtree(temp_database_dir)
 
 def annotate_vcf(args):
@@ -324,5 +329,7 @@ def annotate_vcf(args):
                              args.vcf_file, config_filename, args.debug)
   check_annotations(annotated_vcf)
   move_annotated_vcf(annotated_vcf, args.output_vcf)
-  if not args.keep:
+  if args.keep:
+    logging.info("You can find temporary files in '%s'", temp_database_dir)
+  else:
     delete_temp_database(temp_database_dir)

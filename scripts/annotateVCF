@@ -8,11 +8,13 @@ import sys
 from annotateVCF.annotateVCF import annotate_vcf, check_and_amend_executables
 
 def parse_arguments():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+    description="Takes a VCF and applies annotations from a GFF using SnpEff"
+  )
   parser.add_argument('--snpeff-exec', type=argparse.FileType('r'),
-                     help='Path to your prefered SnpEff executable')
+                      help='Path to your prefered SnpEff executable (default: snpEff.jar)')
   parser.add_argument('--java-exec', type=argparse.FileType('r'),
-                     help='Path to a copy of Java version 1.7')
+                      help='Path to Java 1.7 (default: java)')
   parser.add_argument('--coding-table', type=str,
                       default='default: Bacterial_and_Plant_Plastid',
                       help="A mapping of contig name to coding table formatted in YAML")
