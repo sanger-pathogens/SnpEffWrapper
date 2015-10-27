@@ -1,0 +1,15 @@
+language: python
+python:
+  - "3.4"
+jdk:
+  - openjdk7
+  - oraclejdk7
+sudo: false
+cache:
+  directories:
+  - "${HOME}/dependencies"
+before_install:
+  - "source install_dependencies.sh"
+install:
+  - "python setup.py develop"
+script: ./annotateVCF/tests/test_annotateVCF.py
