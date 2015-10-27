@@ -192,7 +192,7 @@ def check_contigs(vcf_contigs, gff_contigs, coding_table):
     raise UnknownCodingTableError("Could not find coding table, see warnings for details")
 
 def create_temp_database(gff_file):
-  database_dir = tempfile.TemporaryDirectory(prefix='snpeff_data_dir_', dir=os.getcwd()).name
+  database_dir = tempfile.mkdtemp(prefix='snpeff_data_dir_', dir=os.getcwd())
   logging.debug("Creating directory %s for temporary database" % database_dir)
   data_dir = os.path.join(database_dir, 'data')
   logging.debug("data_dir: %s" % data_dir)
@@ -219,7 +219,8 @@ def create_config_file(temp_database_dir, genome_name, vcf_contigs,
     print(config_content, file=output_file, flush=True)
   return output_filename
 
-def _snpeff_build_database(java_exec, snpeff_exec, config_filename):
+def _snpeff_build_database(java_exec, snpeff_exec, config_filename, stdout,
+                           stderr):
   command = [java_exec, "-Xmx4g", "-jar",
              snpeff_exec, "build",
              "-gff3", "-verbose",
@@ -228,15 +229,16 @@ def _snpeff_build_database(java_exec, snpeff_exec, config_filename):
   logging.info("Building snpeff database")
   logging.debug("using the following command: %s" % " ".join([str(c) for c in command]))
   try:
-    subprocess.check_call(command, stdout=subprocess.DEVNULL)
+    subprocess.check_call(command, stdout=stdout, stderr=stderr)
   except CalledProcessError:
     raise BuildDatabaseError("Problem building the database from your GFF")
 
 def _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename,
-                     output_file):
+                     output_file, stderr, annotation_stats_file):
   command = [java_exec, "-Xmx4g", "-jar",
              snpeff_exec, "ann",
              "-nodownload", "-verbose",
+             "-stats", annotation_stats_file,
              "-c", config_filename,
              "data",
              vcf_filename]
@@ -244,19 +246,47 @@ def _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename,
   logging.debug("using the following command: %s" % " ".join(command))
   logging.debug("writing output to %s" % output_file.name)
   try:
-    subprocess.check_call(command, stdout=output_file)
+    subprocess.check_call(command, stdout=output_file, stderr=stderr)
   except CalledProcessError:
     raise AnnotationError("Problem annotating %s" % vcf_filename)
 
-def run_snpeff(temp_database_dir, java_exec, snpeff_exec, vcf_file, config_filename):
+def _get_snpeff_output_files(verbose):
   temp_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
                                                  dir=temp_database_dir,
-                                                 prefix='snpeff_annotation_',
+                                                 prefix='snpeff_output_',
                                                  suffix='.vcf')
+  if verbose:
+    build_stdout = tempfile.NamedTemporaryFile(mode='w',
+                                                  delete=False,
+                                                  dir=temp_database_dir,
+                                                  prefix='snpeff_build_db_',
+                                                  suffix='.o')
+    build_stderr = tempfile.NamedTemporaryFile(mode='w',
+                                                  delete=False,
+                                                  dir=temp_database_dir,
+                                                  prefix='snpeff_build_db_',
+                                                  suffix='.e')
+    annotate_stderr = tempfile.NamedTemporaryFile(mode='w',
+                                                  delete=False,
+                                                  dir=temp_database_dir,
+                                                  prefix='snpeff_annotate_',
+                                                  suffix='.e')
+  else:
+    build_stdout, build_stderr = sys.stdout, sys.stderr
+    annotate_stderr = sys.stderr
+
+  return temp_output_file, build_stdout, build_stderr, annotate_stderr
+
+def run_snpeff(temp_database_dir, java_exec, snpeff_exec, vcf_file,
+               config_filename, verbose):
+  temp_output_file, build_stdout, build_stderr, annotate_stderr = _get_snpeff_output_files(verbose)
   vcf_filename = vcf_file.name
-  _snpeff_build_database(java_exec, snpeff_exec, config_filename)
+  _snpeff_build_database(java_exec, snpeff_exec, config_filename, build_stdout,
+                        build_stderr)
   logging.debug("Outputting temporary VCF to %s" % vcf_filename)
-  _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename, temp_output_file)
+  annotation_stats_file = os.path.join(temp_database_dir, 'snpEff_summary.html')
+  _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename,
+                   temp_output_file, annotate_stderr, annotation_stats_file)
   temp_output_file.close()
   temp_output_file = open(temp_output_file.name, 'r')
   return temp_output_file
@@ -309,7 +339,7 @@ def annotate_vcf(args):
   config_filename = create_config_file(temp_database_dir, genome_name,
                                    vcf_contigs, coding_table)
   annotated_vcf = run_snpeff(temp_database_dir, args.java_exec, args.snpeff_exec,
-                             args.vcf_file, config_filename)
+                             args.vcf_file, config_filename, args.verbose)
   check_annotations(annotated_vcf)
   move_annotated_vcf(annotated_vcf, args.output_vcf)
   delete_temp_database(temp_database_dir)
