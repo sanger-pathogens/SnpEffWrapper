@@ -324,4 +324,5 @@ def annotate_vcf(args):
                              args.vcf_file, config_filename, args.debug)
   check_annotations(annotated_vcf)
   move_annotated_vcf(annotated_vcf, args.output_vcf)
-  delete_temp_database(temp_database_dir)
+  if not args.keep:
+    delete_temp_database(temp_database_dir)

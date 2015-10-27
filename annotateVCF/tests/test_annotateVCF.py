@@ -296,6 +296,7 @@ CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|ERROR_CHROMOSOME_NOT_FOUND	GT	0	1
                                                      suffix='.vcf')
     fake_args.output_vcf = output_annotated_vcf
     fake_args.debug = False
+    fake_args.keep = False
 
     annotate_vcf(fake_args)
 

@@ -25,6 +25,8 @@ def parse_arguments():
                       help="Output for the annotated VCF (default: stdout)")
   parser.add_argument('--debug', action='store_true', default=False,
                       help="Show lots of SnpEff and other debug output")
+  parser.add_argument('--keep', action='store_true', default=False,
+                      help="Keep temporary files and databases (useful for debugging)")
   args = parser.parse_args()
   args = check_and_amend_executables(args)
 
