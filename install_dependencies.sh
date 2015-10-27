@@ -29,8 +29,13 @@ download () {
 
 cd $build_dir
 download $SNPEFF_DOWNLOAD_URL snpEff_${SNPEFF_VERSION}.zip
-unzip snpEff_${SNPEFF_VERSION}.zip
-mv snpEff snpEff_${SNPEFF_VERSION}
+
+if [ -e "snpEff_${SNPEFF_VERSION}" ]; then
+  echo "Skipping unzip of snpEff_${SNPEFF_VERSION}.zip; it already exists"
+else
+  unzip snpEff_${SNPEFF_VERSION}.zip
+  mv snpEff snpEff_${SNPEFF_VERSION}
+fi
 
 export SNPEFF_EXEC="${build_dir}/snpEff_${SNPEFF_VERSION}/snpEff.jar"
 
