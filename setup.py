@@ -5,6 +5,7 @@ import multiprocessing
 setup(name='annotateVCF',
       version='0.0.0',
       scripts=[
+        'scripts/annotateVCF'
       ],
       test_suite='nose.collector',
       tests_require=[

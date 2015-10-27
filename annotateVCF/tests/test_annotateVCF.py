@@ -18,27 +18,23 @@ class TestAnnotateVCF(unittest.TestCase):
     self.fake_args = FakeArgs()
 
   @patch('annotateVCF.annotateVCF._java_version_ok')
-  @patch('annotateVCF.annotateVCF.argparse.ArgumentParser')
   @patch('annotateVCF.annotateVCF.shutil')
-  def test_snpeff_not_in_path(self, shutil_mock, argument_parser_mock, java_ok):
+  def test_snpeff_not_in_path(self, shutil_mock, java_ok):
     parsed_args = MagicMock()
     parsed_args.snpeff_exec.name = 'foobar'
-    argument_parser = MagicMock()
-    argument_parser.parse_args.return_value = parsed_args
-    argument_parser_mock.return_value = argument_parser
-
-    actual_args = parse_arguments()
+    actual_args = check_and_amend_executables(parsed_args)
     self.assertEqual(actual_args.snpeff_exec, 'foobar')
 
     parsed_args.snpeff_exec = None
     shutil_mock.which.return_value = None
-    self.assertRaises(MissingSNPEffError, parse_arguments)
+    self.assertRaises(MissingSNPEffError, check_and_amend_executables,
+                      parsed_args)
     shutil_mock.which.assert_any_call('snpeff')
     shutil_mock.which.reset_mock()
 
     parsed_args.snpeff_exec = None
     shutil_mock.which.return_value = '/bin/snpEff'
-    actual_args = parse_arguments()
+    actual_args = check_and_amend_executables(parsed_args)
     shutil_mock.which.assert_any_call('snpeff')
     self.assertEqual(actual_args.snpeff_exec, '/bin/snpEff')
 
@@ -87,7 +83,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     actual_contigs = get_vcf_contigs(fake_vcf)
     self.assertEqual(actual_contigs, expected_contigs)
 
-  @patch('annotateVCF.annotateVCF.logging.warn')
+  @patch('annotateVCF.annotateVCF.logger.warn')
   def test_check_contigs(self, warn_mock):
     vcf_contigs = ['CHROM1']
     gff_contigs = ['CHROM1']
@@ -243,7 +239,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     list_of_ok_javas = []
     self.assertRaises(WrongJavaError, _choose_java)
 
-  @patch('annotateVCF.annotateVCF.logging.warn')
+  @patch('annotateVCF.annotateVCF.logger.warn')
   def test_check_annotations(self, warn_mock):
     fake_vcf = StringIO("""\
 ##fileformat=VCFv4.1

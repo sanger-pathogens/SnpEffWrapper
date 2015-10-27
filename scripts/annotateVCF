@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+import argparse
+import logging
+import shutil
+import sys
+
+from annotateVCF.annotateVCF import annotate_vcf, check_and_amend_executables
+
+def parse_arguments():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--snpeff-exec', type=argparse.FileType('r'),
+                     help='Path to your prefered SnpEff executable')
+  parser.add_argument('--java-exec', type=argparse.FileType('r'),
+                     help='Path to a copy of Java version 1.7')
+  parser.add_argument('--coding-table', type=str,
+                      default='default: Bacterial_and_Plant_Plastid',
+                      help="A mapping of contig name to coding table formatted in YAML")
+  parser.add_argument('gff_file', type=argparse.FileType('r'),
+                      help="GFF with annotations including a reference genome sequence")
+  parser.add_argument('vcf_file', type=argparse.FileType('r'),
+                      help="VCF input to annotate (NB must be aligned to the reference in your GFF")
+  parser.add_argument('-o', '--output_vcf', type=argparse.FileType('w'),
+                      default=sys.stdout,
+                      help="Output for the annotated VCF (default: stdout)")
+  parser.add_argument('--verbose', action='store_true', default=False,
+                      help="Show lots of SnpEff and other debug output")
+  args = parser.parse_args()
+  args = check_and_amend_executables(args)
+
+  return args
+
+if __name__ == '__main__':
+  args = parse_arguments()
+  if args.verbose:
+    logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s (%(pathname)s:%(lineno)d)",
+                        level=logging.DEBUG)
+  else:
+    logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s",
+                        level=logging.INFO)
+  logger = logging.getLogger('annotateVCF')
+  annotate_vcf(args)
