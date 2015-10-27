@@ -23,7 +23,7 @@ def parse_arguments():
   parser.add_argument('-o', '--output_vcf', type=argparse.FileType('w'),
                       default=sys.stdout,
                       help="Output for the annotated VCF (default: stdout)")
-  parser.add_argument('--verbose', action='store_true', default=False,
+  parser.add_argument('--debug', action='store_true', default=False,
                       help="Show lots of SnpEff and other debug output")
   args = parser.parse_args()
   args = check_and_amend_executables(args)
@@ -32,7 +32,7 @@ def parse_arguments():
 
 if __name__ == '__main__':
   args = parse_arguments()
-  if args.verbose:
+  if args.debug:
     logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s (%(pathname)s:%(lineno)d)",
                         level=logging.DEBUG)
   else:

@@ -232,12 +232,12 @@ def _snpeff_annotate(java_exec, snpeff_exec, vcf_filename, config_filename,
   except CalledProcessError:
     raise AnnotationError("Problem annotating %s" % vcf_filename)
 
-def _get_snpeff_output_files(temp_database_dir, verbose):
+def _get_snpeff_output_files(temp_database_dir, debug):
   temp_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
                                                  dir=temp_database_dir,
                                                  prefix='snpeff_output_',
                                                  suffix='.vcf')
-  if verbose:
+  if debug:
     build_stdout, build_stderr = sys.stdout, sys.stderr
     annotate_stderr = sys.stderr
   else:
@@ -260,8 +260,8 @@ def _get_snpeff_output_files(temp_database_dir, verbose):
   return temp_output_file, build_stdout, build_stderr, annotate_stderr
 
 def run_snpeff(temp_database_dir, java_exec, snpeff_exec, vcf_file,
-               config_filename, verbose):
-  temp_output_file, build_stdout, build_stderr, annotate_stderr = _get_snpeff_output_files(temp_database_dir, verbose)
+               config_filename, debug):
+  temp_output_file, build_stdout, build_stderr, annotate_stderr = _get_snpeff_output_files(temp_database_dir, debug)
   vcf_filename = vcf_file.name
   _snpeff_build_database(java_exec, snpeff_exec, config_filename, build_stdout,
                         build_stderr)
@@ -321,7 +321,7 @@ def annotate_vcf(args):
   config_filename = create_config_file(temp_database_dir, genome_name,
                                    vcf_contigs, coding_table)
   annotated_vcf = run_snpeff(temp_database_dir, args.java_exec, args.snpeff_exec,
-                             args.vcf_file, config_filename, args.verbose)
+                             args.vcf_file, config_filename, args.debug)
   check_annotations(annotated_vcf)
   move_annotated_vcf(annotated_vcf, args.output_vcf)
   delete_temp_database(temp_database_dir)
