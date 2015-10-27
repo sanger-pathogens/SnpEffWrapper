@@ -174,7 +174,7 @@ def check_contigs(vcf_contigs, gff_contigs, coding_table):
   if len(missing_coding_tables) > 0:
     raise MissingCodonTableError("Could not find coding tables for all contigs, see warnings for details")
   if missing_contigs == vcf_contigs:
-    raise NoCommonContigsError("Could not find anotation data for any contigs, see warnings for details")
+    raise NoCommonContigsError("Could not find annotation data for any contigs, see warnings for details")
   if len(unknown_encodings) > 0:
     raise UnknownCodingTableError("Could not find coding table, see warnings for details")
 
