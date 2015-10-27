@@ -3,6 +3,7 @@
 import tempfile
 import unittest
 import pkg_resources
+import vcf
 
 from io import StringIO
 from unittest.mock import patch, MagicMock
@@ -192,7 +193,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
                                                      delete=False)
       open_mock.return_value = fake_output_file
       fake_output_filename = fake_output_file.name
-  
+
       tests_dir = pkg_resources.resource_filename('annotateVCF', 'tests')
       expected_config_filename = os.path.join(tests_dir, 'data', 'config')
       temp_database_dir = '/tmp/fake_dir'
@@ -260,6 +261,62 @@ CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|ERROR_CHROMOSOME_NOT_FOUND	GT	0	1
     self.assertRaises(AnnotationError, check_annotations, fake_vcf)
     expected_warning = "1 instances of 'ERROR_CHROMOSOME_NOT_FOUND': A contig in your VCF could not be found in your GFF. Are you sure that contigs use consitent names between your input data and the reference?"
     warn_mock.assert_called_once_with(expected_warning)
+
+  @patch('annotateVCF.annotateVCF.delete_temp_database')
+  @patch('annotateVCF.annotateVCF._get_snpeff_output_files')
+  def test_happy_case(self, output_mock, delete_database_mock):
+    delete_database_mock.side_effect = shutil.rmtree
+    temp_annotated_vcf = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                     dir=os.getcwd(),
+                                                     prefix='temp_annotated_',
+                                                     suffix='.vcf')
+    other_temp_files = [tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                    dir=os.getcwd(),
+                                                    prefix='temp_output_')
+                        for i in range(3)]
+    output_mock.return_value = [temp_annotated_vcf] + other_temp_files
+
+    fake_args = MagicMock()
+    snpeff_exec = os.environ.get('SNPEFF_EXEC', 'snpEff.jar')
+    self.assertTrue(os.path.isfile(snpeff_exec), "Couldn't find snpeff, set with SNPEFF_EXEC envionment variable")
+    fake_args.snpeff_exec = snpeff_exec
+
+    java_exec = os.environ.get('JAVA_EXEC', shutil.which('java'))
+    self.assertTrue(os.path.isfile(java_exec), "Could not find Java, set with JAVA_EXEC environment variable")
+    self.assertTrue(_java_version_ok(java_exec), "%s isn't Java 1.7, set with JAVA_EXEC environment variable" % java_exec)
+    fake_args.java_exec = java_exec
+
+    fake_args.coding_table = 'default: Bacterial_and_Plant_Plastid'
+
+    tests_dir = pkg_resources.resource_filename('annotateVCF', 'tests')
+    minimal_gff_filename = os.path.join(tests_dir, 'data', 'minimal.gff')
+    minimal_vcf_filename = os.path.join(tests_dir, 'data', 'minimal.vcf')
+    fake_args.gff_file = open(minimal_gff_filename, 'r')
+    fake_args.vcf_file = open(minimal_vcf_filename, 'r')
+
+    output_annotated_vcf = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                     dir=os.getcwd(),
+                                                     prefix='output_annotated_',
+                                                     suffix='.vcf')
+    fake_args.output_vcf = output_annotated_vcf
+    fake_args.verbose = False
+
+    annotate_vcf(fake_args)
+
+    output_annotated_vcf = open(output_annotated_vcf.name, 'r')
+    vcf_reader = vcf.Reader(output_annotated_vcf)
+    (only_record,) = vcf_reader # Will raise an exception if there isn't exactly one
+    (only_annotation,) = only_record.INFO['ANN'] # likewise
+    self.assertRegex(only_annotation,
+                     '^A\|missense_variant\|.+\|c\.14C>A\|p\.Pro5His\|')
+
+    self.assertEqual(delete_database_mock.call_count, 1)
+
+    for f in other_temp_files:
+      f.close()
+      os.remove(f.name)
+    output_annotated_vcf.close()
+    os.remove(output_annotated_vcf.name)
 
 if __name__ == '__main__':
   unittest.main()
