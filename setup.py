@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 import multiprocessing
 
 setup(name='annotateVCF',
-      version='0.0.0',
+      version='0.1.0',
       scripts=[
         'scripts/annotateVCF'
       ],

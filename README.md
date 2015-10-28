@@ -10,7 +10,7 @@ made making this tool a lot easier.
 ## Usage
 
 ```
-annotateVCF annotateVCF/tests/data/minimal.gff annotateVCF/tests/data/minimal.vcf -o minimal.annotated.vcf
+$ annotateVCF annotateVCF/tests/data/minimal.gff annotateVCF/tests/data/minimal.vcf -o minimal.annotated.vcf
 ```
 
 ```
