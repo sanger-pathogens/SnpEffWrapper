@@ -8,18 +8,18 @@ import vcf
 from io import StringIO
 from unittest.mock import patch, MagicMock
 
-from annotateVCF.annotateVCF import *
-from annotateVCF.annotateVCF import _java_version_ok, _choose_java
+from snpEffWrapper.wrapper import *
+from snpEffWrapper.wrapper import _java_version_ok, _choose_java
 
-class TestAnnotateVCF(unittest.TestCase):
+class TestSnpEffWrapper(unittest.TestCase):
   def setUp(self):
     class FakeArgs(object):
       pass
     self.fake_args = FakeArgs()
 
-  @patch('annotateVCF.annotateVCF.os.path.isfile')
-  @patch('annotateVCF.annotateVCF._java_version_ok')
-  @patch('annotateVCF.annotateVCF.shutil')
+  @patch('snpEffWrapper.wrapper.os.path.isfile')
+  @patch('snpEffWrapper.wrapper._java_version_ok')
+  @patch('snpEffWrapper.wrapper.shutil')
   def test_snpeff_not_in_path(self, shutil_mock, java_ok, isfile_mock):
     isfile_mock.side_effect = lambda path: path in ['/foo/snpEff.jar', '/bin/snpEff.jar']
     parsed_args = MagicMock()
@@ -99,7 +99,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     actual_contigs = get_vcf_contigs(fake_vcf)
     self.assertEqual(actual_contigs, expected_contigs)
 
-  @patch('annotateVCF.annotateVCF.logger.warn')
+  @patch('snpEffWrapper.wrapper.logger.warn')
   def test_check_contigs(self, warn_mock):
     vcf_contigs = ['CHROM1']
     gff_contigs = ['CHROM1']
@@ -196,17 +196,17 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     gff_file = FakeFile('foo.gz')
     self.assertEqual(get_genome_name(gff_file), 'foo.gz')
 
-  @patch('annotateVCF.annotateVCF.open', create=True)
+  @patch('snpEffWrapper.wrapper.open', create=True)
   def test_create_config_file(self, open_mock):
     try:
       fake_output_file = tempfile.NamedTemporaryFile(mode='w',
-                                                     prefix='annotateVCF_tmp_',
+                                                     prefix='snpEffWrapper_tmp_',
                                                      dir=os.getcwd(),
                                                      delete=False)
       open_mock.return_value = fake_output_file
       fake_output_filename = fake_output_file.name
 
-      tests_dir = pkg_resources.resource_filename('annotateVCF', 'tests')
+      tests_dir = pkg_resources.resource_filename('snpEffWrapper', 'tests')
       expected_config_filename = os.path.join(tests_dir, 'data', 'config')
       temp_database_dir = '/tmp/fake_dir'
       genome_name = 'fake_genome'
@@ -229,8 +229,8 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     finally:
       os.remove(fake_output_filename)
 
-  @patch('annotateVCF.annotateVCF.shutil.which')
-  @patch('annotateVCF.annotateVCF._java_version_ok')
+  @patch('snpEffWrapper.wrapper.shutil.which')
+  @patch('snpEffWrapper.wrapper._java_version_ok')
   def test_choose_java(self, java_ok_mock, which_mock):
     which_mock.return_value = '/foo/bar/java'
     java_ok_mock.side_effect = lambda java: java in list_of_ok_javas
@@ -255,7 +255,7 @@ PLASMID1	50	.	G	T	.	.	.	GT	1	0
     list_of_ok_javas = []
     self.assertRaises(WrongJavaError, _choose_java)
 
-  @patch('annotateVCF.annotateVCF.logger.warn')
+  @patch('snpEffWrapper.wrapper.logger.warn')
   def test_check_annotations(self, warn_mock):
     fake_vcf = StringIO("""\
 ##fileformat=VCFv4.1
@@ -274,8 +274,8 @@ CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|ERROR_CHROMOSOME_NOT_FOUND	GT	0	1
     expected_warning = "1 instances of 'ERROR_CHROMOSOME_NOT_FOUND': A contig in your VCF could not be found in your GFF. Are you sure that contigs use consitent names between your input data and the reference?"
     warn_mock.assert_called_once_with(expected_warning)
 
-  @patch('annotateVCF.annotateVCF.delete_temp_database')
-  @patch('annotateVCF.annotateVCF._get_snpeff_output_files')
+  @patch('snpEffWrapper.wrapper.delete_temp_database')
+  @patch('snpEffWrapper.wrapper._get_snpeff_output_files')
   def test_happy_case(self, output_mock, delete_database_mock):
     delete_database_mock.side_effect = shutil.rmtree
     temp_annotated_vcf = tempfile.NamedTemporaryFile(mode='w', delete=False,
@@ -300,7 +300,7 @@ CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|ERROR_CHROMOSOME_NOT_FOUND	GT	0	1
 
     fake_args.coding_table = 'default: Bacterial_and_Plant_Plastid'
 
-    tests_dir = pkg_resources.resource_filename('annotateVCF', 'tests')
+    tests_dir = pkg_resources.resource_filename('snpEffWrapper', 'tests')
     minimal_gff_filename = os.path.join(tests_dir, 'data', 'minimal.gff')
     minimal_vcf_filename = os.path.join(tests_dir, 'data', 'minimal.vcf')
     fake_args.gff_file = open(minimal_gff_filename, 'r')

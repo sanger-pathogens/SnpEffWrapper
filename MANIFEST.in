@@ -1,2 +1,2 @@
-recursive-include annotateVCF/data *
-recursive-include annotateVCF/tests/data *
+recursive-include snpEffWrapper/data *
+recursive-include snpEffWrapper/tests/data *
