@@ -1,24 +1,24 @@
-# AnnotateVCF
+# SnpEffWrapper
 
-[![Build Status](https://travis-ci.org/sanger-pathogens/AnnotateVCF.svg?branch=master)](https://travis-ci.org/sanger-pathogens/AnnotateVCF)
+[![Build Status](https://travis-ci.org/sanger-pathogens/SnpEffWrapper.svg?branch=master)](https://travis-ci.org/sanger-pathogens/SnpEffWrapper)
 
-Takes a VCF and applies annotations from a GFF using [SnpEff](http://snpeff.sourceforge.net/)
+Takes a VCF and infers annotations and variant effects from a GFF using [SnpEff](http://snpeff.sourceforge.net/)
 
 If you use this, please consider [citing SnpEff](http://snpeff.sourceforge.net/SnpEff.html#citing); it
-made making this tool a lot easier.
+made making this tool a lot easier.  This software is not endorsed in any respect by the original authors.
 
 ## Usage
 
 ```
-$ annotateVCF annotateVCF/tests/data/minimal.gff annotateVCF/tests/data/minimal.vcf -o minimal.annotated.vcf
+$ snpEffBuildAndRun snpEffWrapper/tests/data/minimal.gff snpEffWrapper/tests/data/minimal.vcf -o minimal.annotated.vcf
 ```
 
 ```
-$ annotateVCF --help
-usage: annotateVCF [-h] [--snpeff-exec SNPEFF_EXEC] [--java-exec JAVA_EXEC]
-                   [--coding-table CODING_TABLE] [-o OUTPUT_VCF] [--debug]
-                   [--keep]
-                   gff_file vcf_file
+$ snpEffBuildAndRun --help
+usage: snpEffBuildAndRun [-h] [--snpeff-exec SNPEFF_EXEC]
+                         [--java-exec JAVA_EXEC] [--coding-table CODING_TABLE]
+                         [-o OUTPUT_VCF] [--debug] [--keep]
+                         gff_file vcf_file
 
 Takes a VCF and applies annotations from a GFF using SnpEff
 
@@ -45,11 +45,11 @@ optional arguments:
                         debugging)
 ```
 
-* annotateVCF will look for SnpEFF.jar in the following locations:
+* snpEffBuildAndRun will look for SnpEFF.jar in the following locations:
   * the file specified by `--snpeff-exec`
   * `snpEff.jar` in your local directory
   * `snpEff.jar` in your `PATH`
-* SnpEff needs Java 1.7 to run; annotateVCF will look in the following locations:
+* SnpEff needs Java 1.7 to run; snpEffBuildAndRun will look in the following locations:
   * the file specified by `--java-exec`
   * `java` in your `PATH`
 
@@ -57,18 +57,18 @@ optional arguments:
 
 You can provide a coding table for each VCF contig otherwise it'll default to
 SnpEff's 'Bacterial_and_Plant_Plastid'.  You can do this by providing a mapping for
-each contig in your VCF to the relevant table in [annotateVCF/data/config.template](annotateVCF/data/config.template)
+each contig in your VCF to the relevant table in [snpEffWrapper/data/config.template](snpEffWrapper/data/config.template)
 in YAML format.
 
 For example:
 ```
-annotateVCF minimal.gff minimal.vcf \
+snpEffBuildAndRun minimal.gff minimal.vcf \
   --coding-table 'default: Standard'
   
-annotateVCF minimal.gff minimal.vcf \
+snpEffBuildAndRun minimal.gff minimal.vcf \
   --coding-table '{CHROM1: Standard, MITO1: Mitochondrial}'
   
-annotateVCF minimal.gff minimal.vcf \
+snpEffBuildAndRun minimal.gff minimal.vcf \
   --coding-table '{default: Standard, MITO1: Mitochondrial}'
 ```
 
@@ -81,10 +81,12 @@ NB you don't need curly brackets if you're only mapping one contig (or setting a
 * At least one of the contigs in the VCF must have annotation data in the GFF
   (you'll get warnings for each VCF config not in the GFF)
 * You cannot provide unknown coding tables (i.e. that can't be found in
-  [config.template](annotateVCF/data/config.template))
+  [config.template](snpEffWrapper/data/config.template))
 
 ## Installation
 
+Install [snpEff](http://snpeff.sourceforge.net/) and Java 1.7 then
+
 ```
-pip install git+https://github.com/sanger-pathogens/AnnotateVCF.git
+pip install git+https://github.com/sanger-pathogens/SnpEffWrapper.git
 ```

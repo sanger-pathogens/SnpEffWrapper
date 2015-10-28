@@ -192,7 +192,7 @@ def get_genome_name(gff_file):
 
 def create_config_file(temp_database_dir, genome_name, vcf_contigs,
                        coding_table):
-  env = Environment(loader=PackageLoader('annotateVCF', 'data'))
+  env = Environment(loader=PackageLoader('snpEffWrapper', 'data'))
   template = env.get_template('config.template')
   output_filename = os.path.join(temp_database_dir, 'config')
   config_content = template.render(

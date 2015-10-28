@@ -2,10 +2,10 @@ import os
 from setuptools import setup, find_packages
 import multiprocessing
 
-setup(name='annotateVCF',
+setup(name='snpEffWrapper',
       version='0.1.0',
       scripts=[
-        'scripts/annotateVCF'
+        'scripts/snpEffBuildAndRun'
       ],
       install_requires=[
         'Jinja2',
@@ -14,8 +14,8 @@ setup(name='annotateVCF',
       ],
       include_package_data=True,
       package_data={
-        'data': 'annotateVCF/data/*',
-        'test_data': 'annotateVCF/tests/data/*'
+        'data': 'snpEffWrapper/data/*',
+        'test_data': 'snpEffWrapper/tests/data/*'
       },
       packages=find_packages(),
       zip_safe=False

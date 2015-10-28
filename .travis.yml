@@ -12,4 +12,4 @@ before_install:
   - "source install_dependencies.sh"
 install:
   - "python setup.py develop"
-script: ./annotateVCF/tests/test_annotateVCF.py
+script: ./snpEffWrapper/tests/test_wrapper.py
