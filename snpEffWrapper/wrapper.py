@@ -305,6 +305,7 @@ def move_annotated_vcf(annotated_vcf, output_vcf):
     annotated_vcf.seek(0)
     logger.info("Writing output to stdout")
     print(annotated_vcf.read(), file=output_vcf)
+    annotated_vcf.close()
   else:
     annotated_vcf.close()
     output_vcf.close()
