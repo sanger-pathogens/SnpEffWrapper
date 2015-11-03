@@ -40,7 +40,7 @@ def _java_version_ok(java):
   if java is None:
     return False
   try:
-    output = subprocess.check_output([java, '-version'], stderr=subprocess.STDOUT)
+    output = subprocess.check_output([java, '-Xmx10m', '-version'], stderr=subprocess.STDOUT)
     first_line = output.decode("utf-8").splitlines()[0]
     match = re.match('^java version "1\.7\.[^"]+"$', first_line)
     return match is not None
