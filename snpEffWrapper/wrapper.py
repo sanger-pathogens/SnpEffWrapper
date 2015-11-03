@@ -37,6 +37,8 @@ class AnnotationError(ValueError):
   pass
 
 def _java_version_ok(java):
+  if java is None:
+    return False
   try:
     output = subprocess.check_output([java, '-version'], stderr=subprocess.STDOUT)
     first_line = output.decode("utf-8").splitlines()[0]
@@ -48,14 +50,15 @@ def _java_version_ok(java):
     return False
 
 def _choose_java():
-  path_java = shutil.which('java')
-  if not path_java is None and _java_version_ok(path_java):
-    logger.debug("Using '%s'", path_java)
-    return path_java
-  sanger_pathogens_java='/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java'
-  if not path_java is None and _java_version_ok(sanger_pathogens_java):
-    logger.debug("Using '%s'", sanger_pathogens_java)
-    return sanger_pathogens_java
+  possible_javas = [
+    shutil.which('java'),
+    '/software/bin/java',
+    '/software/pathogen/external/apps/usr/local/jdk1.7.0_21/bin/java'
+  ]
+  for java in possible_javas:
+    if _java_version_ok(java):
+      logger.debug("Using '%s'", java)
+      return java
   raise WrongJavaError("Could not find a suitable version of Java (1.7)")
 
 def check_and_amend_executables(args):

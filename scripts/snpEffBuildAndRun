@@ -30,8 +30,6 @@ def parse_arguments():
   parser.add_argument('--keep', action='store_true', default=False,
                       help="Keep temporary files and databases (useful for debugging)")
   args = parser.parse_args()
-  args = check_and_amend_executables(args)
-
   return args
 
 if __name__ == '__main__':
@@ -43,4 +41,5 @@ if __name__ == '__main__':
     logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s",
                         level=logging.INFO)
   logger = logging.getLogger('snpEffWrapper')
+  args = check_and_amend_executables(args)
   annotate_vcf(args)
