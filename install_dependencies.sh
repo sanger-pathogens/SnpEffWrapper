@@ -9,10 +9,10 @@ SNPEFF_VERSION="v4_1l_core"
 SNPEFF_DOWNLOAD_URL="http://sourceforge.net/projects/snpeff/files/snpEff_${SNPEFF_VERSION}.zip"
 
 # Make an install location
-if [ ! -d "${HOME}/dependencies" ]; then
-  mkdir ${HOME}/dependencies
+if [ ! -d "${start_dir}/build" ]; then
+  mkdir "${start_dir}/build"
 fi
-build_dir="${HOME}/dependencies"
+build_dir="${start_dir}/build"
 
 # DOWNLOAD ALL THE THINGS
 download () {
