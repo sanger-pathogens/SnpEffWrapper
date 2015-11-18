@@ -281,6 +281,16 @@ def run_snpeff(temp_database_dir, java_exec, snpeff_exec, vcf_file,
   temp_output_file = open(temp_output_file.name, 'r')
   return temp_output_file
 
+def _fix_INFO_fields(annotated_vcf):
+  """Removes Source and Version from INFO fields in VCF File
+
+  The VCF parser I'm using doesn't like the Source or Version fields in
+  the INFO lines.  A future version (v0.6.8) appears to fix this issue,
+  but in the mean time, this hack removes the offending material
+  before the VCF parser sees it"""
+  info_regex = re.compile("^##INFO=<(ID=[^,]+,\s*Number=[^,]+,\s*Type=[^,]+,\s*Description=\"[^\"]+\")(?:,\s*Source=\"[^\"]+\")?(?:,\s*Version=\"[^\"]+\")?>$")
+  return (info_regex.sub(r'##INFO=<\1>', line) for line in annotated_vcf)
+
 def check_annotations(annotated_vcf):
   logger.info("Checking the annotated VCF for common issues")
   error_map = {
@@ -291,7 +301,8 @@ def check_annotations(annotated_vcf):
   }
   error_counter = Counter()
   annotated_vcf.seek(0)
-  vcf_reader = vcf.Reader(annotated_vcf)
+  modified_vcf = _fix_INFO_fields(annotated_vcf) # FIXME: When PyVCF 0.6.8 is released
+  vcf_reader = vcf.Reader(modified_vcf)
   for record in vcf_reader:
     annotations = ','.join(record.INFO['ANN'])
     counter_update = {error: 1 for error in error_map
