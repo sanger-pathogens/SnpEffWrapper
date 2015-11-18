@@ -281,15 +281,14 @@ def run_snpeff(temp_database_dir, java_exec, snpeff_exec, vcf_file,
   temp_output_file = open(temp_output_file.name, 'r')
   return temp_output_file
 
-def _fix_INFO_fields(annotated_vcf):
-  """Removes Source and Version from INFO fields in VCF File
+def _remove_headers(annotated_vcf):
+  """Removes all headers from a VCF before parsing
 
-  The VCF parser I'm using doesn't like the Source or Version fields in
-  the INFO lines.  A future version (v0.6.8) appears to fix this issue,
-  but in the mean time, this hack removes the offending material
-  before the VCF parser sees it"""
-  info_regex = re.compile("^##INFO=<(ID=[^,]+,\s*Number=[^,]+,\s*Type=[^,]+,\s*Description=\"[^\"]+\")(?:,\s*Source=\"[^\"]+\")?(?:,\s*Version=\"[^\"]+\")?>$")
-  return (info_regex.sub(r'##INFO=<\1>', line) for line in annotated_vcf)
+  Some VCF headers (including INFO and FILTER headers) cannot be parsed
+  by the current version of PyVCF.  In this case we are not interested
+  in what they are so this removes them"""
+  header_regex = re.compile("^##.*$")
+  return (line for line in annotated_vcf if not header_regex.match(line))
 
 def check_annotations(annotated_vcf):
   logger.info("Checking the annotated VCF for common issues")
@@ -301,7 +300,7 @@ def check_annotations(annotated_vcf):
   }
   error_counter = Counter()
   annotated_vcf.seek(0)
-  modified_vcf = _fix_INFO_fields(annotated_vcf) # FIXME: When PyVCF 0.6.8 is released
+  modified_vcf = _remove_headers(annotated_vcf) # FIXME: A future version of PyVCF may be able to parse nasty headers
   vcf_reader = vcf.Reader(modified_vcf)
   for record in vcf_reader:
     annotations = ','.join(record.INFO['ANN'])
