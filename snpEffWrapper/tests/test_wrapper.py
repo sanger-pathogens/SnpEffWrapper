@@ -265,9 +265,12 @@ CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|	GT	0	1
     self.assertEqual(check_annotations(fake_vcf), None)
     warn_mock.assert_not_called()
 
+    # PyVCF 0.6.7 cannot parse the following INFO or FILTER fields but we don't
+    # care when we're checking the annotations.
     fake_vcf = StringIO("""\
 ##fileformat=VCFv4.1
 ##INFO=<ID=FOO,Number=1,Type=Float,Description="Some information",Version="3">
+##FILTER=<ID=FAIL_RATIO,Description="Set if true: (GT=\"0\" && PL[0]/PL[1] > 0.75) || (GT=\"1\" && PL[1]/PL[0] > 0.75)">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	sample_1	sample_2
 CHROM1	400	.	G	A	.	.	ANN=A|foo|bar|	GT	0	1
 """)
