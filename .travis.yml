@@ -1,15 +1,18 @@
+dist: precise
 language: python
 python:
   - "3.4"
 jdk:
   - openjdk7
   - oraclejdk7
-sudo: false
 cache:
   directories:
   - "${HOME}/dependencies"
 before_install:
   - "source install_dependencies.sh"
+  - "pip install codecov"
 install:
   - "python setup.py develop"
-script: ./snpEffWrapper/tests/test_wrapper.py
+script: coverage run ./snpEffWrapper/tests/test_wrapper.py
+after_success:
+  - codecov
