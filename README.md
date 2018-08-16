@@ -3,6 +3,7 @@ Takes a VCF and infers annotations and variant effects from a GFF using [SnpEff]
 
 [![Build Status](https://travis-ci.org/sanger-pathogens/SnpEffWrapper.svg?branch=master)](https://travis-ci.org/sanger-pathogens/SnpEffWrapper)  
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-brightgreen.svg)](https://github.com/sanger-pathogens/SnpEffWrapper/blob/master/LICENSE)  
+[![codecov](https://codecov.io/gh/sanger-pathogens/SnpEffWrapper/branch/master/graph/badge.svg)](https://codecov.io/gh/sanger-pathogens/SnpEffWrapper)
 
 ## Content
   * [Introduction](#introduction)
