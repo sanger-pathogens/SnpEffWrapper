@@ -8,6 +8,7 @@ Takes a VCF and infers annotations and variant effects from a GFF using [SnpEff]
 ## Content
   * [Introduction](#introduction)
   * [Installation](#installation)
+    * [Running the tests](#running-the-tests)
   * [Usage](#usage)
     * [Example usage](#example-usage)
     * [Alternative coding tables](#alternative-coding-tables)
@@ -35,7 +36,12 @@ Install [snpEff](http://snpeff.sourceforge.net/) and Java 1.7 then
 ```
 pip install git+https://github.com/sanger-pathogens/SnpEffWrapper.git
 ```
+### Running the tests
+The test can be run from the top level directory:  
 
+```
+./snpEffWrapper/tests/test_wrapper.py
+```
 ## Usage
 ```
 $ snpEffBuildAndRun --help
